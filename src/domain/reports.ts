@@ -8,9 +8,14 @@ import {
 import { calculate } from "./metrics.ts";
 import { validDate, validateAnalysis } from "./validation.ts";
 
-export function quickReportIssue(a: Analysis): string | null {
+export function quickReportIssue(
+  a: Analysis,
+  allowPartial = false,
+): string | null {
   const result = calculate(a.method, a.metrics);
-  if (result.error) return result.error;
+  if (result.error && !allowPartial) return result.error;
+  if (allowPartial && !Object.values(a.metrics).some((v) => v !== null))
+    return "Registra al menos una métrica para el informe descriptivo.";
   if (!validDate(a.start) || !validDate(a.end) || a.start > a.end)
     return "Revisa las fechas: el inicio y el fin deben ser válidos y estar en orden.";
   if (a.goal !== null && (!Number.isFinite(a.goal) || a.goal <= 0))
@@ -23,8 +28,9 @@ export function createQuickReport(
   store: Store,
   recipient = "",
   now = new Date().toISOString(),
+  allowPartial = false,
 ): Report {
-  const issue = quickReportIssue(a);
+  const issue = quickReportIssue(a, allowPartial);
   if (issue) throw new Error(issue);
   const account = store.accounts.find((x) => x.id === a.accountId);
   const client = store.clients.find((x) => x.id === account?.clientId);

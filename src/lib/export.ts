@@ -1,3 +1,5 @@
+import { analysisInsights, metricGuide } from "../domain/insights";
+import type { Field } from "../domain/model";
 import type { Report, Store } from "../domain/model";
 import { fieldLabels, platforms } from "../domain/model";
 import {
@@ -128,6 +130,36 @@ async function pdfDocument(brand: string, id: string) {
     doc.text(values, 188, y + 1, { align: "right" });
     y += height;
   };
+  const page = () => {
+    doc.addPage();
+    y = 22;
+  };
+  const bars = (items: { label: string; value: number | null }[]) => {
+    const max = Math.max(1, ...items.map((item) => item.value ?? 0));
+    const colors: RGB[] = [
+      [58, 85, 218],
+      [141, 102, 225],
+      [33, 145, 184],
+      [29, 143, 118],
+    ];
+    items.forEach((item, index) => {
+      space(18);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(...ink);
+      doc.text(item.label, 20, y);
+      doc.text(item.value === null ? "Sin dato" : fmt(item.value, 0), 190, y, {
+        align: "right",
+      });
+      doc.setFillColor(237, 241, 248);
+      doc.roundedRect(20, y + 3, 170, 3, 1.5, 1.5, "F");
+      if (item.value !== null && item.value > 0) {
+        doc.setFillColor(...colors[index % colors.length]);
+        doc.roundedRect(20, y + 3, (170 * item.value) / max, 3, 0.5, 0.5, "F");
+      }
+      y += 17;
+    });
+  };
   const finish = (title: string, date: string) => {
     const pages = doc.getNumberOfPages();
     for (let page = 1; page <= pages; page++) {
@@ -157,10 +189,15 @@ async function pdfDocument(brand: string, id: string) {
     doc.save(`${slug || "informe"}-${date}.pdf`);
   };
   text("ESTUDIO DE MÉTRICAS / INFORME", 10, blue, true);
-  return { text, heading, result, row, finish, space };
+  return { text, heading, result, row, finish, space, page, bars };
 }
 
-export async function exportPDF(report: Report) {
+export async function exportPDF(
+  report: Report,
+  options: { includeGuide?: boolean } = {},
+) {
+  if (!report.rows.length)
+    throw new Error("Añade al menos un análisis al informe.");
   const pdf = await pdfDocument(report.brand, report.id);
   pdf.text(report.title, 23, ink, true);
   pdf.text(`${report.clientName} | ${report.start} - ${report.end}`, 11);
@@ -193,7 +230,11 @@ export async function exportPDF(report: Report) {
       );
     }
     pdf.heading("Datos del cálculo");
-    for (const key of [...m.fields, m.denominator])
+    const relevant = [...m.fields, m.denominator];
+    const additional = (Object.keys(fieldLabels) as Field[]).filter(
+      (key) => a.metrics[key] !== null && !relevant.includes(key),
+    );
+    for (const key of [...relevant, ...additional])
       pdf.row(
         fieldLabels[key],
         a.metrics[key] === null ? "Sin dato" : fmt(a.metrics[key], 0),
@@ -207,7 +248,7 @@ export async function exportPDF(report: Report) {
       `(${m.fields.map((k) => fieldLabels[k]).join(" + ")}) / ${fieldLabels[m.denominator]} × 100. Método ${m.id} v${a.methodVersion}.`,
     );
     pdf.text(
-      `Período: ${a.start} - ${a.end}. Fuente: ${a.source || "Registro manual"}. Ámbito: ${{ organic: "orgánico", paid: "pagado", mixed: "mixto" }[a.scope]}. ${a.mode === "post" ? "Publicación individual" : "Resumen de período"}; ${a.timing === "lifetime" ? "acumulado a fecha de captura" : "actividad del período"}. Captura: ${a.capturedAt.slice(0, 10)}.`,
+      `Período: ${a.start} - ${a.end}. Fuente: ${a.source || "Registro manual"}. Ámbito: ${{ organic: "orgánico", paid: "pagado", mixed: "mixto" }[a.scope]}. ${a.mode === "post" ? "Publicación individual" : "Resumen de período"}; ${a.timing === "lifetime" ? "acumulado a fecha de captura" : "actividad del período"}. Registro de datos: ${a.capturedAt.slice(0, 10)}.`,
     );
     if (r.error) pdf.text(r.error, 10, [156, 66, 25]);
     if (a.notes) {
@@ -219,11 +260,63 @@ export async function exportPDF(report: Report) {
     pdf.heading("Conclusiones y próximos pasos");
     pdf.text(report.notes);
   }
-  pdf.heading("Cómo interpretar este informe");
-  pdf.text(
-    "Las tasas de distintas redes o métodos se presentan por separado. Un dato ausente no equivale a cero. El engagement describe interacciones y no demuestra ventas ni causalidad. No se deduplican audiencias entre publicaciones o redes. Los resultados dependen de los datos y del contexto registrados.",
-    9,
-  );
+  if (options.includeGuide === false) {
+    pdf.heading("Cómo interpretar este informe");
+    pdf.text(
+      "Las tasas de distintas redes o métodos se presentan por separado. Un dato ausente no equivale a cero. El engagement describe interacciones y no demuestra ventas ni causalidad. No se deduplican audiencias entre publicaciones o redes. Los resultados dependen de los datos y del contexto registrados.",
+      9,
+    );
+  }
+  if (options.includeGuide !== false) {
+    for (const a of report.rows) {
+      const insights = analysisInsights(a);
+      pdf.page();
+      pdf.text("LECTURA VISUAL / DECISIONES", 10, blue, true);
+      pdf.text("Qué nos dicen los datos", 22, ink, true);
+      pdf.text(
+        `${platforms[a.platform]} · ${a.accountName} · ${a.start} - ${a.end}`,
+        10,
+      );
+      pdf.text(a.title, 12, ink, true);
+      pdf.heading("Distribución de interacciones");
+      pdf.bars(insights.distribution);
+      pdf.text(
+        "Conteos observados; cada barra se escala respecto al mayor conteo. Los datos ausentes no son cero y las acciones no equivalen a personas únicas.",
+        9,
+      );
+      pdf.heading("Lectura del resultado");
+      insights.facts.forEach((fact) => pdf.text(fact, 10));
+      pdf.heading("Tu próximo experimento");
+      pdf.text(
+        "Elige una variable para cambiar y mantén las demás lo más estables posible. Define la métrica de evaluación antes de publicar. Revisa el resultado con la misma fórmula y ventana temporal.",
+      );
+      pdf.text("Hipótesis: ________________________________________________");
+      pdf.text("Variable a probar: __________________________________________");
+      pdf.text(
+        "Métrica y fecha de revisión: __________________________________",
+      );
+    }
+    pdf.page();
+    pdf.text("GUÍA PRÁCTICA / PARA TU CUENTA", 10, blue, true);
+    pdf.text("De la lectura a la acción", 22, ink, true);
+    pdf.text("Una rutina sencilla para gestionar y evaluar tu contenido.", 11);
+    if (report.rows.length > 1)
+      pdf.text(`Plan orientativo a partir de: ${report.rows[0].title}`, 9);
+    const guide = analysisInsights(report.rows[0]);
+    for (const action of guide.actions) {
+      pdf.heading(action.title);
+      pdf.text(action.text);
+    }
+    pdf.heading("Métricas, en palabras sencillas");
+    for (const [label, meaning] of metricGuide) {
+      pdf.text(label, 10, ink, true);
+      pdf.text(meaning, 9);
+    }
+    pdf.text(
+      "Estas sugerencias se generan con reglas explicables. Son hipótesis para probar, no garantías de rendimiento ni un diagnóstico causal. Conserva las fuentes y pide contexto antes de tomar decisiones.",
+      9,
+    );
+  }
   pdf.finish(report.title, report.start);
 }
 

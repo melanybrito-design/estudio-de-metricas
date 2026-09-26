@@ -10,3 +10,4 @@ FUENTES.json
 out
 node_modules
 *.tsbuildinfo
+public/ocr

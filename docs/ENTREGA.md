@@ -14,6 +14,13 @@ Implementación de la primera versión operativa del plan: P0 y funciones centra
 - PDF directo desde un cálculo completo sin cuenta: resultado destacado, tabla de datos, fórmula, meta personal, contexto y notas. Paginación y pies de página.
 - Conversión, CTR, costos, CAC, ROAS, ROI y CLV independientes con texto copiable y descarga PDF directa.
 
+## Capturas e informe para autogestión
+
+- Carga de una captura Instagram PNG/JPG/WebP con OCR local español/inglés, modo claro/oscuro, progreso, cancelación y alternativa manual.
+- Revisión de ocho tipos de métricas, evidencia de lectura, valores ambiguos sin rellenar, detección de abreviaciones y fechas/ámbito confirmados por la persona.
+- Informe descriptivo con datos parciales y reporte visual con barras, lectura de resultados, espacio para hipótesis y guía práctica. Las sugerencias son reglas explicables.
+- Sin API externa ni imágenes almacenadas. Importación disponible en Instagram; TikTok y LinkedIn mantienen ingreso manual/CSV y pueden usar los informes ampliados.
+
 ## Evolución pendiente
 
 - Importadores nativos XLS/XLSX después de disponer de muestras anonimizadas.

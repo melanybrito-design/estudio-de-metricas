@@ -43,3 +43,12 @@ Vercel: https://estudio-de-metricas.vercel.app. Despliegue de producción en est
 - Renderizado de los PDF revisado; exportación extensa conserva las 45 observaciones y distribuye el contenido en tres páginas con numeración.
 - Vista móvil de 390 px sin desbordamiento horizontal; botón de descarga visible y utilizable.
 - Los PDF breves aprovechan una página; informes extensos crean las páginas necesarias. La descarga no sustituye guardar un análisis ni crear un respaldo.
+
+## Capturas de Instagram e informe de autogestión (26 de septiembre de 2026)
+
+- 28 pruebas de dominio aprobadas. Casos nuevos: separadores y abreviaciones, porcentajes descartados, etiquetas distintas para alcance/vistas, conflictos y baja confianza, revisión manual, PDF parcial sin tasa inventada e interpretación de metas.
+- OCR real en navegador sobre dos imágenes sintéticas (clara y oscura): siete métricas correctamente propuestas (240 likes, 45 comentarios, 15 compartidos, 20 guardados, 8.000 cuentas alcanzadas, 12.500 vistas y 2.000 seguidores).
+- Aplicación de valores tras confirmar fechas y revisión; resultado 320 / 8.000 = 4 %. Ningún cliente ni análisis necesita guardarse para descargar.
+- PDF completo y parcial renderizados e inspeccionados: tres páginas, tabla con datos adicionales, barras, interpretación y guía. El parcial conserva el dato ausente y muestra «No calculable».
+- Vista móvil de 390 px sin desbordamiento. Cancelación, alternativa manual y fechas obligatorias verificadas. Consola sin errores después de fijar la resolución del lector.
+- No se ha usado una captura real de cliente: el formato específico de sus imágenes requiere validación. El OCR no garantiza interpretar iconos sin etiquetas ni todos los diseños de Instagram.

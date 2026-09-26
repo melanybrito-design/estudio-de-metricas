@@ -33,6 +33,8 @@ import {
   type BusinessKey,
 } from "@/domain/metrics";
 import { Field, Gauge, PlatformIcon, SectionHead } from "./ui";
+import ScreenshotImporter from "./ScreenshotImporter";
+import { analysisInsights } from "@/domain/insights";
 import { createQuickReport, quickReportIssue } from "@/domain/reports";
 import { exportPDF, exportBusinessPDF } from "@/lib/export";
 export function initialAnalysis(platform: Platform = "instagram"): Analysis {
@@ -79,6 +81,8 @@ export default function Calculator({
   const [busy, setBusy] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [recipient, setRecipient] = useState("");
+  const [includeGuide, setIncludeGuide] = useState(true);
+  const [allowPartial, setAllowPartial] = useState(false);
   const [tab, setTab] = useState<"social" | "business">("social");
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
@@ -96,13 +100,20 @@ export default function Calculator({
   const r = calculate(a.method, a.metrics);
   const account = store.accounts.find((x) => x.id === a.accountId);
   const client = store.clients.find((x) => x.id === account?.clientId);
-  const pdfIssue = quickReportIssue(a);
+  const pdfIssue = quickReportIssue(a, allowPartial);
+  const insights = analysisInsights(a);
   async function downloadReport() {
     if (exporting) return;
     setExporting(true);
     try {
-      const report = createQuickReport(a, store, recipient);
-      await exportPDF(report);
+      const report = createQuickReport(
+        a,
+        store,
+        recipient,
+        undefined,
+        allowPartial,
+      );
+      await exportPDF(report, { includeGuide });
       notify(
         "Informe PDF descargado. Puedes conservarlo o compartirlo con tu cliente.",
       );
@@ -208,6 +219,34 @@ export default function Calculator({
                 </button>
               ))}
             </div>
+            {a.platform === "instagram" && (
+              <ScreenshotImporter
+                onApply={(data) => {
+                  patch({
+                    ...data,
+                    method:
+                      data.metrics.reach !== null
+                        ? "ig-reach"
+                        : data.metrics.views !== null
+                          ? "ig-views"
+                          : data.mode === "post" &&
+                              data.metrics.followers !== null
+                            ? "ig-followers"
+                            : "ig-reach",
+                    timing: data.mode === "period" ? "activity" : "lifetime",
+                    capturedAt: new Date().toISOString(),
+                    postId: "",
+                    campaignId: "",
+                    goal: null,
+                    title: "Análisis de Instagram · captura revisada",
+                  });
+                  setAllowPartial(true);
+                  notify(
+                    "Métricas aplicadas. Revisa el resultado y descarga tu informe.",
+                  );
+                }}
+              />
+            )}
             <div className="form-grid">
               <Field label="Cuenta del cliente">
                 <select
@@ -334,7 +373,11 @@ export default function Calculator({
               </Field>
             </div>
             <div className="input-heading">
-              <h3>Métricas de la publicación</h3>
+              <h3>
+                {a.mode === "period"
+                  ? "Métricas del período"
+                  : "Métricas de la publicación"}
+              </h3>
               <span>Vacío ≠ cero</span>
             </div>
             <div className="form-grid metrics-inputs">
@@ -462,6 +505,8 @@ export default function Calculator({
                     confirm("¿Limpiar los cambios de este formulario?")
                   ) {
                     setA(initialAnalysis(a.platform));
+                    setRecipient("");
+                    setAllowPartial(false);
                     setDirty(false);
                     setError("");
                   }
@@ -547,6 +592,28 @@ export default function Calculator({
                   />
                 </Field>
               )}
+              <label className="review-confirm">
+                <input
+                  type="checkbox"
+                  checked={includeGuide}
+                  onChange={(e) => setIncludeGuide(e.target.checked)}
+                />
+                <span>Incluir gráficos y guía para gestionar la cuenta</span>
+              </label>
+              {r.value === null &&
+                Object.values(a.metrics).some((v) => v !== null) && (
+                  <label className="review-confirm">
+                    <input
+                      type="checkbox"
+                      checked={allowPartial}
+                      onChange={(e) => setAllowPartial(e.target.checked)}
+                    />
+                    <span>
+                      Generar informe descriptivo con los datos disponibles. La
+                      tasa faltante aparecerá como no calculable.
+                    </span>
+                  </label>
+                )}
               <div className="pdf-actions">
                 <button
                   className="primary full"
@@ -566,12 +633,14 @@ export default function Calculator({
                     ? r.error
                       ? "Completa las métricas para descargar tu informe."
                       : pdfIssue
-                    : "Incluye resultado, métricas, fórmula, meta y notas. No necesitas guardar el análisis primero."}
+                    : r.value === null
+                      ? "Informe descriptivo: incluye datos observados, faltantes y guía; no inventa una tasa."
+                      : "Incluye resultado, métricas, fórmula, meta y notas. No necesitas guardar el análisis primero."}
                 </p>
               </div>
               <button
                 className="secondary full"
-                disabled={!!pdfIssue}
+                disabled={!!quickReportIssue(a)}
                 onClick={copy}
               >
                 {copied ? <Check size={17} /> : <Copy size={17} />}{" "}
@@ -593,6 +662,22 @@ export default function Calculator({
                 </small>
               </details>
             </section>
+            <details className="card insight-preview">
+              <summary>Lectura del resultado y próximos pasos</summary>
+              {insights.facts.map((f) => (
+                <p key={f}>{f}</p>
+              ))}
+              {insights.actions.map((action) => (
+                <div key={action.title}>
+                  <h3>{action.title}</h3>
+                  <p>{action.text}</p>
+                </div>
+              ))}
+              <small>
+                Sugerencias basadas en reglas y en los datos ingresados. No son
+                una auditoría ni un diagnóstico causal.
+              </small>
+            </details>
             <div className="insight-card">
               <span className="insight-icon">
                 <Sparkles size={21} />

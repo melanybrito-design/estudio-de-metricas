@@ -34,6 +34,7 @@ export default function Reports({
   const [busy, setBusy] = useState(false);
   const [snapshot, setSnapshot] = useState<Report | null>(null);
   const [partial, setPartial] = useState(false);
+  const [includeGuide, setIncludeGuide] = useState(true);
   const clientIds = new Set(
     rows.map(
       (a) => store.accounts.find((x) => x.id === a.accountId)?.clientId || "",
@@ -77,7 +78,7 @@ export default function Reports({
   async function pdf(r: Report) {
     setBusy(true);
     try {
-      await exportPDF(r);
+      await exportPDF(r, { includeGuide });
       notify("PDF descargado.");
     } catch {
       notify("No se pudo crear el PDF. Inténtalo nuevamente.");
@@ -107,6 +108,14 @@ export default function Reports({
               onChange={(e) => setTitle(e.target.value)}
             />
           </Field>
+          <label className="review-confirm">
+            <input
+              type="checkbox"
+              checked={includeGuide}
+              onChange={(e) => setIncludeGuide(e.target.checked)}
+            />
+            <span>Incluir gráficos y guía práctica para el cliente</span>
+          </label>
           <Field label="Observaciones y próximos pasos">
             <textarea
               value={notes}
