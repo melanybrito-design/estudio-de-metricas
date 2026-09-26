@@ -24,7 +24,7 @@ Herramienta personal de Melany Brito para calcular engagement de Instagram, TikT
 5. En **Reportes**, filtra un cliente y revisa el contenido antes de descargar el PDF.
 6. En **Configuración**, descarga periódicamente un respaldo completo.
 
-La calculadora rápida permite calcular y copiar sin crear un cliente. Para guardar, selecciona una cuenta.
+La calculadora rápida permite calcular, copiar y **descargar un informe PDF** sin crear un cliente. Completa las métricas, revisa las fechas y pulsa **Descargar informe PDF** junto al resultado. Puedes indicar el cliente o marca, una meta y observaciones. La descarga captura los datos actuales del formulario; no guarda un análisis en el historial. Para conservarlo en el historial, selecciona una cuenta y guarda.
 
 ## Datos y privacidad
 
@@ -71,7 +71,7 @@ python3 -m http.server 3002 --directory out
 
 No importa exportaciones nativas XLS/XLSX sin adaptar ni conecta automáticamente las redes. Usa la plantilla CSV propia. No suma alcance como audiencia única ni presenta una tasa global de redes. El método por seguidores funciona por publicación, no como suma indiscriminada de un mes.
 
-Las calculadoras de negocio son independientes; sus resultados se copian a las observaciones del reporte. No hay embudo atribuido automático ni simulador guardado. Logo, colores de marca por cliente, etiquetas libres, importadores nativos y sincronización quedan como evolución documentada. El piloto con datos reales de clientes todavía debe realizarlo Melany.
+Las calculadoras de negocio son independientes; permiten descargar su propio PDF con los datos, fórmula y contexto, o copiar sus resultados a las observaciones de otro reporte. No hay embudo atribuido automático ni simulador guardado. Logo, colores de marca por cliente, etiquetas libres, importadores nativos y sincronización quedan como evolución documentada. El piloto con datos reales de clientes todavía debe realizarlo Melany.
 
 ## Tipografías
 

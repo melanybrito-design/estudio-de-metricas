@@ -294,6 +294,10 @@ export const businessMethods = {
 };
 export type BusinessKey = keyof typeof businessMethods;
 export function businessCalculate(key: BusinessKey, v: (number | null)[]) {
+  const result = businessResult(key, v);
+  return result !== null && Number.isFinite(result) ? result : null;
+}
+function businessResult(key: BusinessKey, v: (number | null)[]) {
   const expected = businessMethods[key].fields.length;
   if (v.length !== expected || v.some((n) => n === null || !Number.isFinite(n)))
     return null;

@@ -2284,3 +2284,26 @@ th {
 .input-icon input {
   padding-left: 38px;
 }
+
+.pdf-actions {
+  margin-top: 20px;
+}
+.export-hint {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #647087;
+  margin: 9px 0 14px;
+}
+.spin {
+  animation: export-spin 1s linear infinite;
+}
+@keyframes export-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}

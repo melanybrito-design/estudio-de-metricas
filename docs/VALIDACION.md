@@ -33,3 +33,13 @@ No se ha hecho un piloto con métricas reales ni se ha medido reducción de tiem
 ## Publicación
 
 Vercel: https://estudio-de-metricas.vercel.app. Despliegue de producción en estado READY y URL abierta en navegador con interfaz cargada. La aplicación pública comienza vacía en un origen nuevo.
+
+## Mejora: PDF directo desde la calculadora (26 de septiembre de 2026)
+
+- 22 pruebas de dominio aprobadas, incluida creación de un reporte sin cliente guardado, copia independiente del formulario, resolución del cliente seleccionado y bloqueo de cálculos incompletos/fechas/metas inválidas.
+- Compilación estática de producción y TypeScript aprobados.
+- Navegador real: descargar cálculo TikTok de 300 interacciones / 8.000 vistas = 3,75 %, sin crear cuenta ni guardar análisis. Meta 5 %: diferencia -1,25 puntos porcentuales. PDF de una página con notas.
+- Navegador real: ROI (966 - 500) / 500 = 93,20 %, PDF independiente con fórmula y contexto.
+- Renderizado de los PDF revisado; exportación extensa conserva las 45 observaciones y distribuye el contenido en tres páginas con numeración.
+- Vista móvil de 390 px sin desbordamiento horizontal; botón de descarga visible y utilizable.
+- Los PDF breves aprovechan una página; informes extensos crean las páginas necesarias. La descarga no sustituye guardar un análisis ni crear un respaldo.

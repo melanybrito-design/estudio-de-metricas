@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import {
   Copy,
+  Download,
+  LoaderCircle,
   Save,
   Sparkles,
   Info,
@@ -31,6 +33,8 @@ import {
   type BusinessKey,
 } from "@/domain/metrics";
 import { Field, Gauge, PlatformIcon, SectionHead } from "./ui";
+import { createQuickReport, quickReportIssue } from "@/domain/reports";
+import { exportPDF, exportBusinessPDF } from "@/lib/export";
 export function initialAnalysis(platform: Platform = "instagram"): Analysis {
   return {
     id: uid(),
@@ -73,6 +77,8 @@ export default function Calculator({
     initial ? structuredClone(initial) : initialAnalysis(),
   );
   const [busy, setBusy] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [recipient, setRecipient] = useState("");
   const [tab, setTab] = useState<"social" | "business">("social");
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
@@ -90,6 +96,22 @@ export default function Calculator({
   const r = calculate(a.method, a.metrics);
   const account = store.accounts.find((x) => x.id === a.accountId);
   const client = store.clients.find((x) => x.id === account?.clientId);
+  const pdfIssue = quickReportIssue(a);
+  async function downloadReport() {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const report = createQuickReport(a, store, recipient);
+      await exportPDF(report);
+      notify(
+        "Informe PDF descargado. Puedes conservarlo o compartirlo con tu cliente.",
+      );
+    } catch (e) {
+      notify(`No se pudo descargar el informe: ${(e as Error).message}`);
+    } finally {
+      setExporting(false);
+    }
+  }
   async function save() {
     setError("");
     if (!a.title.trim()) {
@@ -158,7 +180,11 @@ export default function Calculator({
         </button>
       </div>
       {tab === "business" ? (
-        <Business currency={store.settings.currency} notify={notify} />
+        <Business
+          currency={store.settings.currency}
+          brand={store.settings.brand}
+          notify={notify}
+        />
       ) : (
         <div className="calculator-grid">
           <section className="card calculator-form">
@@ -511,9 +537,41 @@ export default function Calculator({
                   />
                 </div>
               </Field>
+              {!account && (
+                <Field label="Cliente o marca para el PDF · opcional">
+                  <input
+                    value={recipient}
+                    maxLength={150}
+                    placeholder="Ej. Inmobiliaria del Sol"
+                    onChange={(e) => setRecipient(e.target.value)}
+                  />
+                </Field>
+              )}
+              <div className="pdf-actions">
+                <button
+                  className="primary full"
+                  disabled={!!pdfIssue || exporting}
+                  onClick={downloadReport}
+                  aria-describedby="pdf-export-hint"
+                >
+                  {exporting ? (
+                    <LoaderCircle size={17} className="spin" />
+                  ) : (
+                    <Download size={17} />
+                  )}
+                  {exporting ? "Generando informe…" : "Descargar informe PDF"}
+                </button>
+                <p id="pdf-export-hint" className="export-hint">
+                  {pdfIssue
+                    ? r.error
+                      ? "Completa las métricas para descargar tu informe."
+                      : pdfIssue
+                    : "Incluye resultado, métricas, fórmula, meta y notas. No necesitas guardar el análisis primero."}
+                </p>
+              </div>
               <button
-                className="primary full"
-                disabled={r.value === null}
+                className="secondary full"
+                disabled={!!pdfIssue}
                 onClick={copy}
               >
                 {copied ? <Check size={17} /> : <Copy size={17} />}{" "}
@@ -559,14 +617,17 @@ export default function Calculator({
 }
 function Business({
   currency,
+  brand,
   notify,
 }: {
   currency: string;
+  brand: string;
   notify: (s: string) => void;
 }) {
   const [key, setKey] = useState<BusinessKey>("conversion");
   const [values, setValues] = useState<(number | null)[]>([null, null]);
   const [context, setContext] = useState("");
+  const [exporting, setExporting] = useState(false);
   const m = businessMethods[key];
   const result = businessCalculate(key, values);
   const text =
@@ -632,6 +693,7 @@ function Business({
         <Field label="Cliente, período y criterio de atribución">
           <textarea
             value={context}
+            maxLength={12000}
             onChange={(e) => setContext(e.target.value)}
             rows={4}
             placeholder="Ej. Cliente A · septiembre · ventas atribuidas por UTM. La contribución ya descuenta costos de producto, pero no la campaña."
@@ -641,7 +703,7 @@ function Business({
           <Info size={17} />
           <span>
             Calculadora independiente: no modifica tu historial de engagement.
-            Copia el resultado para incorporarlo a las observaciones del
+            Descarga su informe PDF o copia el resultado para incluirlo en otro
             reporte.
           </span>
         </div>
@@ -665,8 +727,45 @@ function Business({
             cero.
           </p>
         )}
+        <div className="pdf-actions">
+          <button
+            className="primary full"
+            disabled={result === null || exporting}
+            onClick={async () => {
+              if (exporting) return;
+              setExporting(true);
+              try {
+                await exportBusinessPDF({
+                  key,
+                  values: [...values],
+                  context,
+                  currency,
+                  brand,
+                });
+                notify("Informe de negocio descargado.");
+              } catch (e) {
+                notify(
+                  `No se pudo descargar el informe: ${(e as Error).message}`,
+                );
+              } finally {
+                setExporting(false);
+              }
+            }}
+          >
+            {exporting ? (
+              <LoaderCircle size={17} className="spin" />
+            ) : (
+              <Download size={17} />
+            )}
+            {exporting ? "Generando informe…" : "Descargar informe PDF"}
+          </button>
+          <p className="export-hint">
+            Incluye los datos utilizados, la fórmula, el resultado y el contexto
+            de tu campaña.
+          </p>
+        </div>
         <button
-          className="primary"
+          className="secondary full"
           disabled={result === null}
           onClick={async () => {
             try {

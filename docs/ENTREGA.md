@@ -11,7 +11,8 @@ Implementación de la primera versión operativa del plan: P0 y funciones centra
 - Persistencia, confirmación de guardado, protección de cambios pendientes y recuperación validada.
 - Importación CSV con vista previa, validación, duplicados y reversión del último lote de la sesión.
 - PDF, CSV y texto; firma configurable; reportes guardados como instantáneas.
-- Conversión, CTR, costos, CAC, ROAS, ROI y CLV independientes con texto copiable.
+- PDF directo desde un cálculo completo sin cuenta: resultado destacado, tabla de datos, fórmula, meta personal, contexto y notas. Paginación y pies de página.
+- Conversión, CTR, costos, CAC, ROAS, ROI y CLV independientes con texto copiable y descarga PDF directa.
 
 ## Evolución pendiente
 

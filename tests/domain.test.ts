@@ -1,3 +1,4 @@
+import { createQuickReport, quickReportIssue } from "../src/domain/reports.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -197,4 +198,82 @@ test("Backup rejects bad version, foreign keys and malformed metrics", () => {
     validateAnalysis(row({ method: "tt-followers", mode: "period" })),
   );
   assert.equal(validDate("2026-02-30"), false);
+});
+
+test("Quick report exports a complete draft without saving a client or changing its data", () => {
+  const store = emptyStore();
+  const analysis = row({
+    title: "",
+    source: "",
+    notes: "Revisar próximos contenidos",
+    goal: 5,
+  });
+  const before = structuredClone({ store, analysis });
+  const report = createQuickReport(
+    analysis,
+    store,
+    "Cliente de prueba",
+    "2026-09-26T12:00:00Z",
+  );
+  assert.equal(report.clientName, "Cliente de prueba");
+  assert.equal(report.title, "Informe de engagement · TikTok");
+  assert.equal(report.rows[0].source, "Registro manual");
+  assert.equal(report.rows[0].goal, 5);
+  assert.equal(
+    calculate(report.rows[0].method, report.rows[0].metrics).value,
+    3.75,
+  );
+  report.rows[0].metrics.likes = 0;
+  assert.deepEqual({ store, analysis }, before);
+});
+
+test("Quick report resolves the selected account and client", () => {
+  const store = emptyStore();
+  store.clients.push({
+    id: "c",
+    name: "Cliente A",
+    sector: "Servicios",
+    objective: "",
+    archived: false,
+  });
+  store.accounts.push({
+    id: "acct",
+    clientId: "c",
+    name: "@cliente",
+    platform: "tiktok",
+    type: "business",
+    archived: false,
+  });
+  const report = createQuickReport(
+    row({ accountId: "acct" }),
+    store,
+    "Otro nombre",
+  );
+  assert.equal(report.clientName, "Cliente A");
+  assert.equal(report.rows[0].accountName, "@cliente");
+  assert.equal(report.brand, store.settings.brand);
+});
+
+test("Quick export blocks incomplete metrics, invalid dates and invalid goals", () => {
+  for (const analysis of [
+    row({ metrics: { ...metrics, likes: null } }),
+    row({ metrics: { ...metrics, views: 0 } }),
+    row({ end: "2026-08-01" }),
+    row({ start: "2026-02-30" }),
+    row({ goal: 0 }),
+    row({ goal: Infinity }),
+  ]) {
+    assert.ok(quickReportIssue(analysis));
+    assert.throws(() => createQuickReport(analysis, emptyStore()));
+  }
+  assert.equal(quickReportIssue(row()), null);
+});
+
+test("Business calculations reject overflow instead of exporting Infinity", () => {
+  assert.equal(businessCalculate("clv", [Number.MAX_VALUE, 12, 5]), null);
+  assert.equal(
+    businessCalculate("roi", [Number.MAX_VALUE, Number.MIN_VALUE]),
+    null,
+  );
+  assert.equal(businessCalculate("roi", [966, 500]), 93.2);
 });
