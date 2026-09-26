@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    {
+      "id": "formula-linkedin",
+      "title": "Separar engagement de páginas y métricas personalizadas",
+      "queries": [
+        {
+          "id": "page-definition",
+          "source": {
+            "label": "LinkedIn Help · Content analytics for your LinkedIn Page",
+            "metricDefinitions": [
+              {
+                "label": "Engagement de páginas",
+                "definition": "La tasa de engagement de páginas relaciona clics, reacciones, comentarios y compartidos con las impresiones."
+              }
+            ],
+            "caveats": [
+              "Una tasa calculada sobre seguidores utiliza otro denominador y no debe presentarse como equivalente."
+            ]
+          },
+          "summary": "La fórmula de páginas documentada por LinkedIn fundamenta la separación de métodos propuesta."
+        },
+        {
+          "id": "member-definition",
+          "source": {
+            "label": "LinkedIn Help · Post analytics for your content"
+          },
+          "summary": "La documentación de publicaciones personales enumera impresiones, alcance, reacciones, comentarios, republicaciones, guardados y envíos, entre otras métricas."
+        }
+      ]
+    },
+    {
+      "id": "entrada-datos",
+      "title": "Archivos primero; integración automática condicionada al acceso",
+      "queries": [
+        {
+          "id": "creator-export",
+          "source": { "label": "LinkedIn Help · View your creator analytics" },
+          "summary": "LinkedIn documenta una exportación XLSX para analíticas de creadores."
+        },
+        {
+          "id": "page-export",
+          "source": {
+            "label": "LinkedIn Help · Export your LinkedIn Page analytics report"
+          },
+          "summary": "LinkedIn documenta la exportación de analíticas de páginas en XLS."
+        },
+        {
+          "id": "api-access",
+          "source": {
+            "label": "Microsoft Learn · LinkedIn Community Management Overview",
+            "caveats": [
+              "La conexión automática requiere validar el programa, la aprobación y los permisos correspondientes al tipo de cuenta."
+            ]
+          },
+          "summary": "El programa Community Management documenta condiciones de acceso y niveles de desarrollo."
+        }
+      ]
+    }
+  ]
+}

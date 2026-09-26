@@ -1,0 +1,12 @@
+.git
+output
+tests
+*.md
+FUENTES.json
+.env*
+.vercel
+.playwright-cli
+.next
+out
+node_modules
+*.tsbuildinfo
