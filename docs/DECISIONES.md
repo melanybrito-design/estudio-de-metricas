@@ -11,3 +11,7 @@
 - PDF generado localmente y fuentes de interfaz servidas desde el proyecto; no se suben métricas a terceros.
 - No se implementan P3 (sincronización, portal, APIs, IA) porque el plan las define como opcionales y requieren otro alcance.
 - Repositorio privado independiente; despliegue Vercel. Los datos de pruebas quedan en el perfil de navegador y en `output/`, ignorado por Git y Vercel.
+
+## Identidad para publicar en Vercel
+
+Vercel valida que el autor de Git pertenezca al proyecto. Se configuró el correo local de este repositorio con el correo verificado de la cuenta autenticada de Vercel, en lugar del correo automático del Mac. No se modificó la configuración global ni se reescribieron commits publicados. La integración automática con GitHub continúa pendiente de vincular las cuentas; las publicaciones actuales se realizan con la CLI autenticada.
